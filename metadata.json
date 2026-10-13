@@ -1,0 +1,6 @@
+{
+  "name": "GameVault - Game Publishing & Download Portal",
+  "description": "Publish your games, share direct links, and download game files instantly with GameVault.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

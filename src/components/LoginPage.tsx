@@ -11,7 +11,8 @@ import {
   CheckCircle2, 
   X,
   ExternalLink,
-  Check
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
@@ -63,12 +64,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Social Auth Modal States
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showGithubModal, setShowGithubModal] = useState(false);
-  const [googleEmailInput, setGoogleEmailInput] = useState('ahtikh22@gmail.com');
-  const [googleNameInput, setGoogleNameInput] = useState('Ahtisham Gamer');
-  const [githubUsernameInput, setGithubUsernameInput] = useState('ahtikh22');
+  const [googleEmailInput, setGoogleEmailInput] = useState('');
+  const [googleNameInput, setGoogleNameInput] = useState('');
+  const [googleError, setGoogleError] = useState('');
+  const [githubUsernameInput, setGithubUsernameInput] = useState('');
+  const [githubError, setGithubError] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Standard Email/Password Login
+  // Standard Email/Username/Admin Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanEmail = email.trim();
@@ -97,7 +100,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         onLoginSuccess(adminUser);
         return;
       } else {
-        setError('Incorrect administrator password.');
+        setError('Incorrect password for Administrator account.');
         return;
       }
     }
@@ -108,13 +111,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       return;
     }
 
+    // Standard user login or registration
     const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+    const displayName = gamerTag.trim() || username;
     const user: UserProfile = {
       id: 'usr_' + Date.now(),
       username: username,
       email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@gamevault.io`,
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
-      gamerTag: gamerTag || `${username}_Gamer`,
+      gamerTag: displayName,
       authProvider: 'email',
       isAdmin: false,
       publishedCount: 0,
@@ -126,23 +131,40 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     onLoginSuccess(user);
   };
 
-  // Google Login Flow
-  const handleGoogleSignIn = (selectedEmail?: string, selectedName?: string) => {
+  // Google Login Flow: User logs in with their OWN Google Account
+  const handleGoogleSignIn = () => {
+    const rawEmail = googleEmailInput.trim();
+    if (!rawEmail) {
+      setGoogleError('Please enter your Google Email address.');
+      return;
+    }
+
+    // Basic email format check
+    if (!rawEmail.includes('@') || !rawEmail.includes('.')) {
+      setGoogleError('Please enter a valid Google email address (e.g. name@gmail.com).');
+      return;
+    }
+
+    setGoogleError('');
     setIsConnecting(true);
+
     setTimeout(() => {
-      const emailToUse = selectedEmail || googleEmailInput || 'gamer@gmail.com';
-      const nameToUse = selectedName || googleNameInput || emailToUse.split('@')[0];
+      const emailToUse = rawEmail;
       const username = emailToUse.split('@')[0];
+      // Format display name from user input or clean up from email username
+      const rawName = googleNameInput.trim();
+      const displayName = rawName || username.charAt(0).toUpperCase() + username.slice(1);
 
       const user: UserProfile = {
         id: 'usr_g_' + Date.now(),
         username: username,
         email: emailToUse,
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}&backgroundColor=b6e3f4`,
-        gamerTag: `${nameToUse.replace(/\s+/g, '')}_Vault`,
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}&backgroundColor=b6e3f4`,
+        gamerTag: displayName,
         authProvider: 'google',
-        publishedCount: 1,
-        totalDownloadsCount: 5,
+        isAdmin: false,
+        publishedCount: 0,
+        totalDownloadsCount: 0,
         joinedDate: new Date().toISOString()
       };
 
@@ -153,23 +175,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }, 600);
   };
 
-  // GitHub Login Flow
-  const handleGithubSignIn = (handleToUse?: string) => {
-    setIsConnecting(true);
-    setTimeout(() => {
-      const username = handleToUse || githubUsernameInput || 'github_gamer';
-      const cleanUsername = username.trim().replace(/^@/, '');
+  // GitHub Login Flow: User logs in with their OWN GitHub Username
+  const handleGithubSignIn = () => {
+    const rawUsername = githubUsernameInput.trim().replace(/^@/, '');
+    if (!rawUsername) {
+      setGithubError('Please enter your GitHub username.');
+      return;
+    }
 
+    setGithubError('');
+    setIsConnecting(true);
+
+    setTimeout(() => {
+      const cleanUsername = rawUsername;
       const user: UserProfile = {
         id: 'usr_gh_' + Date.now(),
         username: cleanUsername,
         email: `${cleanUsername}@users.noreply.github.com`,
-        // Direct GitHub avatar or fallback
+        // Direct GitHub avatar or avatar seed
         avatarUrl: `https://github.com/${cleanUsername}.png`,
-        gamerTag: `${cleanUsername}`,
+        gamerTag: cleanUsername,
         authProvider: 'github',
-        publishedCount: 2,
-        totalDownloadsCount: 18,
+        isAdmin: false,
+        publishedCount: 0,
+        totalDownloadsCount: 0,
         joinedDate: new Date().toISOString()
       };
 
@@ -178,34 +207,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       setShowGithubModal(false);
       onLoginSuccess(user);
     }, 600);
-  };
-
-  // 1-Click Fast Demo accounts
-  const handleQuickDemo = (type: 'creator' | 'guest') => {
-    const demoUser: UserProfile = type === 'creator' ? {
-      id: 'usr_creator_demo',
-      username: 'GameCreator_Pro',
-      email: 'creator@gamevault.io',
-      avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=GameCreator',
-      gamerTag: 'AlphaDev_X',
-      authProvider: 'email',
-      publishedCount: 3,
-      totalDownloadsCount: 1420,
-      joinedDate: '2026-01-15'
-    } : {
-      id: 'usr_guest_demo',
-      username: 'Guest_Gamer',
-      email: 'guest@gamevault.io',
-      avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=GuestGamer',
-      gamerTag: 'PlayerOne',
-      authProvider: 'email',
-      publishedCount: 0,
-      totalDownloadsCount: 42,
-      joinedDate: '2026-03-20'
-    };
-
-    localStorage.setItem('gamevault_user', JSON.stringify(demoUser));
-    onLoginSuccess(demoUser);
   };
 
   return (
@@ -244,7 +245,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             {/* Google Sign In Button */}
             <button
               type="button"
-              onClick={() => setShowGoogleModal(true)}
+              onClick={() => {
+                setGoogleError('');
+                setShowGoogleModal(true);
+              }}
               className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-semibold text-xs sm:text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer border border-slate-200 hover:shadow-lg"
             >
               <GoogleIcon />
@@ -254,7 +258,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             {/* GitHub Sign In Button */}
             <button
               type="button"
-              onClick={() => setShowGithubModal(true)}
+              onClick={() => {
+                setGithubError('');
+                setShowGithubModal(true);
+              }}
               className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-black text-white font-semibold text-xs sm:text-sm border border-slate-700/80 hover:border-slate-500 shadow-md transition-all duration-200 flex items-center justify-center gap-3 cursor-pointer"
             >
               <GitHubIcon />
@@ -266,7 +273,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="relative flex py-2 items-center mb-4">
             <div className="flex-grow border-t border-slate-800"></div>
             <span className="flex-shrink mx-3 text-[11px] text-slate-500 uppercase tracking-wider">
-              Or Continue with Email
+              Or Sign In with Account
             </span>
             <div className="flex-grow border-t border-slate-800"></div>
           </div>
@@ -298,8 +305,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/50 text-red-300 text-xs">
-              {error}
+            <div className="mb-4 p-3 rounded-lg bg-red-950/40 border border-red-800/50 text-red-300 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -324,7 +332,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Email / Username
+                Username or Email
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -332,7 +340,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com or username"
+                  placeholder="Enter your username or email"
                   required
                   className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                 />
@@ -353,12 +361,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-10 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+                  className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-12 py-2 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer select-none"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -369,34 +377,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               type="submit"
               className="w-full mt-2 py-2.5 px-4 bg-gradient-to-r from-cyan-500 via-sky-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer text-xs sm:text-sm"
             >
-              <span>{isRegister ? 'Create Account & Enter' : 'Sign In to GameVault'}</span>
+              <span>{isRegister ? 'Create Account & Enter' : 'Sign In to Dashboard'}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
 
-          {/* Quick 1-Click Access Buttons */}
-          <div className="mt-5 pt-4 border-t border-slate-800/80">
-            <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2.5">
-              Or Instant 1-Click Demo Access
+          {/* Secure Login Guarantee */}
+          <div className="mt-5 pt-4 border-t border-slate-800/80 text-center">
+            <p className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Authentication required to access GameVault dashboard</span>
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('creator')}
-                className="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 hover:text-cyan-300 transition-colors flex items-center justify-center gap-1.5"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Creator Access</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('guest')}
-                className="py-2 px-3 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs font-medium text-slate-200 hover:text-indigo-300 transition-colors flex items-center justify-center gap-1.5"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Guest Gamer</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -417,88 +408,80 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="relative w-full max-w-sm bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden p-6 text-slate-200">
             <button
               onClick={() => setShowGoogleModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* Google Brand Header */}
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
-              <div className="p-2 rounded-xl bg-white shadow-sm flex items-center justify-center">
+              <div className="p-2.5 rounded-xl bg-white shadow-sm flex items-center justify-center">
                 <GoogleIcon />
               </div>
               <div>
                 <h3 className="font-bold text-white text-sm">Sign in with Google</h3>
-                <p className="text-[11px] text-slate-400">Choose an account for GameVault</p>
+                <p className="text-[11px] text-slate-400">Enter your Google account credentials</p>
               </div>
             </div>
 
-            {/* Quick 1-Click Detected Google Account */}
-            <div className="space-y-2 mb-4">
-              <button
-                type="button"
-                disabled={isConnecting}
-                onClick={() => handleGoogleSignIn('ahtikh22@gmail.com', 'Ahtisham Gamer')}
-                className="w-full p-3 rounded-xl bg-slate-950 hover:bg-slate-800/90 border border-slate-700 flex items-center justify-between text-left transition-colors group cursor-pointer"
-              >
-                <div className="flex items-center gap-3 truncate">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
-                    A
-                  </div>
-                  <div className="truncate">
-                    <p className="text-xs font-bold text-white group-hover:text-cyan-300">Ahtisham Gamer</p>
-                    <p className="text-[11px] text-slate-400 truncate">ahtikh22@gmail.com</p>
-                  </div>
-                </div>
-                <Check className="w-4 h-4 text-emerald-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-
-              <button
-                type="button"
-                disabled={isConnecting}
-                onClick={() => handleGoogleSignIn('developer.vault@gmail.com', 'Vault Developer')}
-                className="w-full p-3 rounded-xl bg-slate-950 hover:bg-slate-800/90 border border-slate-700 flex items-center justify-between text-left transition-colors group cursor-pointer"
-              >
-                <div className="flex items-center gap-3 truncate">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
-                    V
-                  </div>
-                  <div className="truncate">
-                    <p className="text-xs font-bold text-white group-hover:text-indigo-300">Vault Developer</p>
-                    <p className="text-[11px] text-slate-400 truncate">developer.vault@gmail.com</p>
-                  </div>
-                </div>
-                <Check className="w-4 h-4 text-emerald-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            </div>
+            {googleError && (
+              <div className="mb-3 p-2.5 rounded-lg bg-red-950/50 border border-red-800 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <span>{googleError}</span>
+              </div>
+            )}
 
             {/* Custom Google Account Form */}
-            <div className="pt-3 border-t border-slate-800">
-              <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                Or enter any Google account:
-              </label>
-              <div className="space-y-2">
-                <input
-                  type="email"
-                  value={googleEmailInput}
-                  onChange={(e) => setGoogleEmailInput(e.target.value)}
-                  placeholder="your-name@gmail.com"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
-                />
-                <button
-                  type="button"
-                  disabled={isConnecting}
-                  onClick={() => handleGoogleSignIn()}
-                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <GoogleIcon />
-                  <span>{isConnecting ? 'Signing in...' : 'Sign in with this Google ID'}</span>
-                </button>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  Google Email Address <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={googleEmailInput}
+                    onChange={(e) => {
+                      setGoogleEmailInput(e.target.value);
+                      if (googleError) setGoogleError('');
+                    }}
+                    placeholder="yourname@gmail.com"
+                    autoFocus
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
               </div>
+
+              <div>
+                <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                  Your Full Name / Gamer Tag (Optional)
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={googleNameInput}
+                    onChange={(e) => setGoogleNameInput(e.target.value)}
+                    placeholder="e.g. Alex Hunter"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="button"
+                disabled={isConnecting}
+                onClick={handleGoogleSignIn}
+                className="w-full mt-2 py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              >
+                <GoogleIcon />
+                <span>{isConnecting ? 'Signing in with Google...' : 'Sign In with Google'}</span>
+              </button>
             </div>
 
             <p className="text-[10px] text-slate-500 text-center mt-4">
-              Google will securely share your email, name, and profile picture with GameVault.
+              Google will securely connect your profile and email with GameVault.
             </p>
           </div>
         </div>
@@ -510,55 +493,68 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           <div className="relative w-full max-w-sm bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden p-6 text-slate-200">
             <button
               onClick={() => setShowGithubModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
 
             {/* GitHub Brand Header */}
             <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-800">
-              <div className="p-2 rounded-xl bg-slate-950 border border-slate-700 text-white flex items-center justify-center">
+              <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white flex items-center justify-center">
                 <GitHubIcon />
               </div>
               <div>
                 <h3 className="font-bold text-white text-sm">Sign in with GitHub</h3>
-                <p className="text-[11px] text-slate-400">Authorize GameVault Developer Portal</p>
+                <p className="text-[11px] text-slate-400">Connect your personal GitHub account</p>
               </div>
             </div>
 
-            {/* GitHub Profile Live Preview */}
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 mb-4 flex items-center gap-3">
-              <img
-                src={`https://github.com/${githubUsernameInput.trim() || 'github'}.png`}
-                alt="GitHub Avatar"
-                className="w-10 h-10 rounded-full border border-slate-700 object-cover bg-slate-800"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://api.dicebear.com/7.x/bottts/svg?seed=github';
-                }}
-              />
-              <div className="truncate">
-                <p className="text-xs font-bold text-white truncate">
-                  @{githubUsernameInput.trim() || 'github_user'}
-                </p>
-                <p className="text-[10px] text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> GitHub Developer Profile
-                </p>
+            {githubError && (
+              <div className="mb-3 p-2.5 rounded-lg bg-red-950/50 border border-red-800 text-red-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <span>{githubError}</span>
               </div>
-            </div>
+            )}
+
+            {/* GitHub Profile Live Preview */}
+            {githubUsernameInput.trim() && (
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 mb-3 flex items-center gap-3">
+                <img
+                  src={`https://github.com/${githubUsernameInput.trim()}.png`}
+                  alt="GitHub Avatar"
+                  className="w-10 h-10 rounded-full border border-slate-700 object-cover bg-slate-800"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${githubUsernameInput.trim()}`;
+                  }}
+                />
+                <div className="truncate">
+                  <p className="text-xs font-bold text-white truncate">
+                    @{githubUsernameInput.trim()}
+                  </p>
+                  <p className="text-[10px] text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Live Profile Detected
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* GitHub Username Input */}
             <div className="space-y-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                  GitHub Username / Handle:
+                  Your GitHub Username / Handle <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs">@</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-mono">@</span>
                   <input
                     type="text"
                     value={githubUsernameInput}
-                    onChange={(e) => setGithubUsernameInput(e.target.value.replace(/^@/, ''))}
-                    placeholder="e.g. ahtikh22 or your GitHub username"
+                    onChange={(e) => {
+                      setGithubUsernameInput(e.target.value.replace(/^@/, ''));
+                      if (githubError) setGithubError('');
+                    }}
+                    placeholder="e.g. your-github-handle"
+                    autoFocus
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
                   />
                 </div>
@@ -568,16 +564,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
               <button
                 type="button"
                 disabled={isConnecting}
-                onClick={() => handleGithubSignIn()}
-                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 hover:bg-black border border-slate-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:border-slate-500"
+                onClick={handleGithubSignIn}
+                className="w-full py-2.5 px-3 rounded-xl bg-slate-950 hover:bg-black border border-slate-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:border-slate-500 disabled:opacity-50"
               >
                 <GitHubIcon />
-                <span>{isConnecting ? 'Connecting GitHub...' : 'Authorize & Sign In with GitHub'}</span>
+                <span>{isConnecting ? 'Authorizing GitHub...' : 'Authorize & Sign In with GitHub'}</span>
               </button>
             </div>
 
             <p className="text-[10px] text-slate-500 text-center mt-4">
-              Allows GameVault to identify your GitHub developer identity and public repositories.
+              Allows GameVault to identify your unique developer identity and public avatar.
             </p>
           </div>
         </div>

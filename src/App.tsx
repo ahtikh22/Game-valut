@@ -16,6 +16,7 @@ import { PublishGameModal } from './components/PublishGameModal';
 import { PlayGameModal } from './components/PlayGameModal';
 import { QRCodeModal } from './components/QRCodeModal';
 import { DownloadsHistoryView } from './components/DownloadsHistoryView';
+import { AdminPanel } from './components/AdminPanel';
 import { 
   Gamepad2, 
   Sparkles, 
@@ -62,7 +63,7 @@ export default function App() {
   });
 
   // UI Navigation & Filters
-  const [activeTab, setActiveTab] = useState<'all' | 'my-games' | 'downloads'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'my-games' | 'downloads' | 'admin'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('All');
   const [selectedGenre, setSelectedGenre] = useState('All');
@@ -102,13 +103,28 @@ export default function App() {
 
   const handleLoginSuccess = (loggedInUser: UserProfile) => {
     setUser(loggedInUser);
-    showToast(`Welcome ${loggedInUser.gamerTag}! Your GameVault session is ready.`);
+    if (loggedInUser.isAdmin) {
+      showToast(`👑 Welcome Administrator Ahtisham01! Master control panel unlocked.`);
+    } else {
+      showToast(`Welcome ${loggedInUser.gamerTag}! Your GameVault session is ready.`);
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('gamevault_user');
     setUser(null);
     showToast('You have been signed out.', 'info');
+  };
+
+  const handleToggleVerifyGame = (gameId: string) => {
+    setGames((prev) => prev.map(g => {
+      if (g.id === gameId) {
+        const nextStatus = g.verifiedSafe === false ? true : false;
+        showToast(`"${g.title}" marked as ${nextStatus ? 'Verified Safe' : 'Unverified'}.`);
+        return { ...g, verifiedSafe: nextStatus };
+      }
+      return g;
+    }));
   };
 
   const handlePublishGame = (newGame: Game) => {
@@ -320,7 +336,7 @@ export default function App() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
         
         {/* Quick Publish Hero Box on 'all' or 'my-games' tabs */}
-        {activeTab !== 'downloads' && (
+        {(activeTab === 'all' || activeTab === 'my-games') && (
           <QuickPublishHero
             onQuickPublish={handlePublishGame}
             onOpenFullModal={() => setIsPublishModalOpen(true)}
@@ -328,8 +344,16 @@ export default function App() {
           />
         )}
 
-        {/* Downloads History View Tab */}
-        {activeTab === 'downloads' ? (
+        {/* Admin Panel Tab */}
+        {activeTab === 'admin' && user.isAdmin ? (
+          <AdminPanel
+            games={games}
+            onDeleteGame={handleDeleteGame}
+            onToggleVerify={handleToggleVerifyGame}
+            onClearAllDownloads={handleClearHistory}
+            onExportBackup={handleExportVault}
+          />
+        ) : activeTab === 'downloads' ? (
           <DownloadsHistoryView
             history={downloadHistory}
             onClearHistory={handleClearHistory}
@@ -400,6 +424,7 @@ export default function App() {
                     onPlayGame={setPlayingGame}
                     onOpenQR={setQrGame}
                     isOwner={game.isUserCreated || game.author === user.username || game.author === user.gamerTag}
+                    isAdmin={user.isAdmin}
                   />
                 ))}
               </div>

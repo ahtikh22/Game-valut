@@ -10,7 +10,8 @@ import {
   Sparkles,
   BookmarkCheck,
   ChevronDown,
-  HardDrive
+  HardDrive,
+  Crown
 } from 'lucide-react';
 import { UserProfile } from '../types';
 
@@ -20,8 +21,8 @@ interface NavbarProps {
   onSearchChange: (q: string) => void;
   onOpenPublish: () => void;
   onLogout: () => void;
-  activeTab: 'all' | 'my-games' | 'downloads';
-  onTabChange: (tab: 'all' | 'my-games' | 'downloads') => void;
+  activeTab: 'all' | 'my-games' | 'downloads' | 'admin';
+  onTabChange: (tab: 'all' | 'my-games' | 'downloads' | 'admin') => void;
   userGamesCount: number;
   downloadsCount: number;
   onExportVault?: () => void;
@@ -144,12 +145,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <div className="px-4 py-3 border-b border-slate-800">
                     <div className="flex items-center justify-between">
                       <p className="font-bold text-white text-sm truncate">{user.gamerTag}</p>
-                      {user.authProvider === 'google' && (
+                      {user.isAdmin && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold flex items-center gap-1">
+                          <Crown className="w-3 h-3 text-amber-400" />
+                          Admin
+                        </span>
+                      )}
+                      {user.authProvider === 'google' && !user.isAdmin && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-950/60 text-red-300 border border-red-800/40">
                           Google
                         </span>
                       )}
-                      {user.authProvider === 'github' && (
+                      {user.authProvider === 'github' && !user.isAdmin && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-200 border border-slate-700">
                           GitHub
                         </span>
@@ -159,6 +166,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   <div className="py-1">
+                    {user.isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onTabChange('admin');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-amber-950/40 text-amber-300 flex items-center justify-between transition-colors border-b border-slate-800/80 mb-1"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Crown className="w-4 h-4 text-amber-400" />
+                          Admin Control Terminal
+                        </span>
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-[10px] text-amber-300 font-bold">
+                          Master
+                        </span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       onClick={() => {
@@ -299,6 +325,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" />
             <span>My Downloads ({downloadsCount})</span>
           </button>
+
+          {user.isAdmin && (
+            <button
+              type="button"
+              onClick={() => onTabChange('admin')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'admin'
+                  ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-md shadow-amber-500/10'
+                  : 'text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 border border-amber-800/40'
+              }`}
+            >
+              <Crown className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span>Admin Panel (Master)</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

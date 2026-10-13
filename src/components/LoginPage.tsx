@@ -71,19 +71,52 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   // Standard Email/Password Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please enter your email and password.');
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError('Please enter your username and password.');
       return;
     }
 
-    const username = email.includes('@') ? email.split('@')[0] : email;
+    // Check for Master Super Admin account (Ahtisham01)
+    if (cleanEmail.toLowerCase() === 'ahtisham01' || cleanEmail.toLowerCase() === 'ahtisham01@gamevault.io') {
+      if (password === 'ahti@01') {
+        const adminUser: UserProfile = {
+          id: 'usr_master_admin_ahtisham',
+          username: 'Ahtisham01',
+          email: 'ahtisham01@gamevault.io',
+          avatarUrl: 'https://api.dicebear.com/7.x/bottts/svg?seed=AhtishamAdmin77',
+          gamerTag: 'Ahtisham (Admin)',
+          authProvider: 'email',
+          isAdmin: true,
+          publishedCount: 15,
+          totalDownloadsCount: 12500,
+          joinedDate: '2026-01-01T00:00:00Z'
+        };
+
+        localStorage.setItem('gamevault_user', JSON.stringify(adminUser));
+        onLoginSuccess(adminUser);
+        return;
+      } else {
+        setError('Incorrect administrator password.');
+        return;
+      }
+    }
+
+    // Protect admin username from unauthorized registration
+    if (isRegister && (cleanEmail.toLowerCase() === 'ahtisham01' || gamerTag.toLowerCase().includes('ahtisham01'))) {
+      setError('This username is reserved for Administrator.');
+      return;
+    }
+
+    const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
     const user: UserProfile = {
       id: 'usr_' + Date.now(),
       username: username,
-      email: email.includes('@') ? email : `${email}@gamevault.io`,
+      email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@gamevault.io`,
       avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`,
       gamerTag: gamerTag || `${username}_Gamer`,
       authProvider: 'email',
+      isAdmin: false,
       publishedCount: 0,
       totalDownloadsCount: 0,
       joinedDate: new Date().toISOString()
@@ -311,15 +344,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 <label className="text-xs font-medium text-slate-300">
                   Password
                 </label>
-                {!isRegister && (
-                  <button 
-                    type="button" 
-                    onClick={() => setPassword('vault123')}
-                    className="text-[11px] text-cyan-400 hover:underline"
-                  >
-                    Auto-fill demo password?
-                  </button>
-                )}
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

@@ -51,6 +51,7 @@ export interface UserProfile {
   avatarUrl: string;
   gamerTag: string;
   authProvider?: 'google' | 'github' | 'email';
+  isAdmin?: boolean;
   publishedCount: number;
   totalDownloadsCount: number;
   joinedDate: string;

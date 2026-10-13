@@ -24,6 +24,7 @@ interface GameCardProps {
   onPlayGame?: (game: Game) => void;
   onOpenQR?: (game: Game) => void;
   isOwner?: boolean;
+  isAdmin?: boolean;
 }
 
 export const GameCard: React.FC<GameCardProps> = ({
@@ -33,7 +34,8 @@ export const GameCard: React.FC<GameCardProps> = ({
   onSelectGame,
   onPlayGame,
   onOpenQR,
-  isOwner
+  isOwner,
+  isAdmin
 }) => {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -217,9 +219,14 @@ export const GameCard: React.FC<GameCardProps> = ({
             </button>
           </div>
 
-          {/* Delete action if user's own game */}
-          {isOwner && onDelete && (
-            <div className="flex justify-end pt-1">
+          {/* Delete action if user's own game or if logged in as Admin */}
+          {(isOwner || isAdmin) && onDelete && (
+            <div className="flex items-center justify-between pt-1">
+              {isAdmin && (
+                <span className="text-[10px] text-amber-400 font-semibold flex items-center gap-1">
+                  👑 Admin
+                </span>
+              )}
               <button
                 type="button"
                 onClick={(e) => {
@@ -228,10 +235,10 @@ export const GameCard: React.FC<GameCardProps> = ({
                     onDelete(game.id);
                   }
                 }}
-                className="text-[11px] text-red-400/80 hover:text-red-300 flex items-center gap-1 px-2 py-0.5 rounded hover:bg-red-950/40 transition-colors"
+                className="text-[11px] text-red-400/80 hover:text-red-300 flex items-center gap-1 px-2 py-0.5 rounded hover:bg-red-950/40 transition-colors ml-auto cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
-                <span>Delete from Vault</span>
+                <span>{isAdmin && !isOwner ? 'Admin Delete' : 'Delete from Vault'}</span>
               </button>
             </div>
           )}

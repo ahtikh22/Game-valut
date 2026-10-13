@@ -377,9 +377,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         </div>
 
         {/* Footer info */}
-        <p className="text-center text-xs text-slate-500 mt-5">
-          GameVault • Publish any game URL, share with anyone & download instantly
-        </p>
+        <div className="text-center mt-5 space-y-1">
+          <p className="text-xs text-slate-500">
+            GameVault • Publish any game URL, share with anyone & download instantly
+          </p>
+          <p className="text-[11px] text-cyan-400 font-medium">
+            Developed by <span className="text-white font-bold">Ahtisham</span>
+          </p>
+        </div>
       </div>
 
       {/* ================= GOOGLE AUTH MODAL ================= */}

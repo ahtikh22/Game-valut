@@ -62,10 +62,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Portal
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:block">
-                Publish Links & Download Games Instantly
-              </p>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <span className="hidden sm:inline">Publish Links & Download</span>
+                <span className="hidden sm:inline text-slate-600">•</span>
+                <span className="text-cyan-300 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 inline-block animate-pulse"></span>
+                  Developed by <strong className="text-white font-bold tracking-wide">Ahtisham</strong>
+                </span>
+              </div>
             </div>
+          </div>
+
+          {/* Top Developer Badge (Middle on Desktop) */}
+          <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-950/60 via-indigo-950/60 to-slate-900 border border-cyan-500/30 shadow-md shadow-cyan-500/5 backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-xs text-slate-300">
+              Developed by <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300">Ahtisham</span>
+            </span>
           </div>
 
           {/* Search Bar */}

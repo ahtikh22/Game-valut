@@ -446,20 +446,56 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-slate-800/80 bg-slate-950 py-8 text-slate-400 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <Gamepad2 className="w-4 h-4" />
+      <footer className="mt-16 border-t border-slate-800/80 bg-slate-950/90 backdrop-blur-md py-10 text-slate-400 text-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          
+          {/* Left: Brand info */}
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-sm shadow-cyan-500/10">
+              <Gamepad2 className="w-5 h-5" />
             </div>
-            <span className="font-bold text-slate-200">GameVault</span>
-            <span className="text-slate-600">|</span>
-            <span>Publish, Share & Direct Download</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-white text-base tracking-tight">GameVault</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-cyan-950 text-cyan-400 border border-cyan-800/40 font-semibold">
+                  v2.0
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Next-Gen Game Publisher & Direct Download Portal
+              </p>
+            </div>
           </div>
 
-          <p className="text-slate-500 text-center sm:text-right">
-            Publish your generated game links and download directly with a single click.
-          </p>
+          {/* Center: Beautiful Developer Signature Badge */}
+          <div className="flex flex-col items-center justify-center px-6 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-950/60 via-slate-900 to-indigo-950/60 border border-cyan-500/40 shadow-xl shadow-cyan-500/10 group hover:border-cyan-400 transition-all duration-300">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-slate-200">
+                Developed with ❤️ by{' '}
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300 text-sm sm:text-base tracking-wide drop-shadow-sm">
+                  Ahtisham
+                </span>
+              </span>
+            </div>
+            <span className="text-[10px] text-cyan-400/90 uppercase tracking-widest font-bold mt-0.5">
+              Lead Platform Architect & Creator
+            </span>
+          </div>
+
+          {/* Right: Guarantee & Info */}
+          <div className="text-center md:text-right">
+            <p className="text-xs text-slate-300 font-medium flex items-center justify-center md:justify-end gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Fast • Direct • Verified Safe</span>
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Paste your links anytime & download directly with 1 click.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
